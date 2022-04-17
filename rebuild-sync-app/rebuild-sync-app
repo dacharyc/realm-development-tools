@@ -1,0 +1,17 @@
+#!/bin/sh
+
+APP_NAME=$(grep '"name":' $REALM_APP/realm_config.json | sed -e 's/.*: "//' -e 's/".*//')
+echo "Enter your Atlas db password:"
+read -s PASSWORD
+realm-cli apps delete --app $APP_ID
+
+# IMPORTANT! DELETE THIS LINE. IN THE LINE BELOW, REPLACE EVERYTHING IN [ ] WITH YOUR CONNECTION STRING DETAILS! (INCLUDING THE [] THEMSELVES!)
+mongosh ["mongodb+srv://cluster0.s8qcn.mongodb.net/ENTERYOURDBNAMEHERE" --apiVersion 1 --username ENTERYOURUSERNAMEHERE] --password $PASSWORD --file dropDB.js
+# mongosh "mongodb+srv://cluster0.s8qcn.mongodb.net/SampleTestDB" --apiVersion 1 --username someUsername --password $PASSWORD --file dropDB.js
+
+REALM_CLI_CREATE_APP_OUTPUT=$(realm-cli apps create --name $APP_NAME --local temp)
+rm -rf temp
+NEW_APP_ID=$(echo "$REALM_CLI_CREATE_APP_OUTPUT" | grep '"client_app_id":' | sed -e 's/.*: "//' -e 's/".*//')
+realm-cli push --remote $NEW_APP_ID --local $REALM_APP --yes
+echo "The new app ID is: $NEW_APP_ID"
+exit 0
